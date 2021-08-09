@@ -96,6 +96,11 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	lcd_init();
 	show_main_menu(5, rgb565(255, 0, 0));
+	select_item(2);
+	select_item(0);
+	select_item(4);
+	select_item(1);
+	select_item(3);
 //	for (int i = 0; i < 8; ++i) {
 //		hagl_draw_rounded_rectangle(2 + i, 2 + i, 158 - i, 126 - i, 8 - i,
 //				rgb565(0, 0, i * 16));
