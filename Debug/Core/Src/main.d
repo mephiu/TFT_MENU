@@ -27,14 +27,14 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h \
  ../Core/Inc/dma.h ../Core/Inc/main.h ../Core/Inc/spi.h \
  ../Core/Inc/gpio.h \
- C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/rgb565.h \
- C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/rgb888.h \
- C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/hsl.h \
- C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/font6x9.h \
- C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/hagl.h \
+ C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/rgb565.h \
+ C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/rgb888.h \
+ C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/hsl.h \
+ C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/font6x9.h \
+ C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/hagl.h \
  ../Core/Inc/hagl_hal.h ../Core/Inc/lcd.h \
- C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/bitmap.h \
- C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/bitmap.h \
+ C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/bitmap.h \
+ C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/bitmap.h \
  ../Core/Inc/menu.h
 
 ../Core/Inc/main.h:
@@ -99,22 +99,22 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 
 ../Core/Inc/gpio.h:
 
-C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/rgb565.h:
+C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/rgb565.h:
 
-C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/rgb888.h:
+C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/rgb888.h:
 
-C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/hsl.h:
+C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/hsl.h:
 
-C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/font6x9.h:
+C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/font6x9.h:
 
-C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/hagl.h:
+C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/hagl.h:
 
 ../Core/Inc/hagl_hal.h:
 
 ../Core/Inc/lcd.h:
 
-C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/bitmap.h:
+C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/bitmap.h:
 
-C:/Users/Adrian/STM32CubeIDE/workspace_1.5.1/LCD_MENU_F401/hagl/include/bitmap.h:
+C:/Users/abastrzyk/Desktop/TFT_MENU/hagl/include/bitmap.h:
 
 ../Core/Inc/menu.h:

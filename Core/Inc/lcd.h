@@ -3,8 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define LCD_WIDTH	160
-#define LCD_HEIGHT	128
+#define LCD_WIDTH	128
+#define LCD_HEIGHT	160
 
 //defined colors have reversed bytes
 #define BLACK     0x0000
