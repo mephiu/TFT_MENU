@@ -1,0 +1,10 @@
+lcd.c:33:13:lcd_cmd	16	static
+lcd.c:41:13:lcd_data	16	static
+lcd.c:49:13:lcd_data16	16	static
+lcd.c:55:13:lcd_set_window	24	static
+lcd.c:65:13:lcd_send	16	static
+lcd.c:85:6:lcd_init	16	static
+lcd.c:106:6:lcd_put_pixel	24	static
+lcd.c:111:6:lcd_copy	8	static
+lcd.c:122:6:lcd_transfer_done	8	static
+lcd.c:127:6:lcd_is_busy	8	static
