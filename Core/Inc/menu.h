@@ -6,5 +6,7 @@
 #define MISC_MENU_ITEMS	5
 
 
-void show_main_menu(int border_width, uint16_t color);
+void show_menu_window();
+void show_sensor_window();
+void show_sensor_data(uint16_t sensor_data[]);
 void show_misc_menu(void);
