@@ -1,5 +1,5 @@
 menu.c:15:6:show_menu_window	48	static
-menu.c:29:6:show_sensor_window	48	static
-menu.c:38:6:show_sensor_data	40	static
-menu.c:47:6:select_item	32	static
-menu.c:53:6:deselect_item	32	static
+menu.c:31:6:show_sensor_window	48	static
+menu.c:42:6:show_sensor_data	40	static
+menu.c:51:6:select_item	32	static
+menu.c:57:6:deselect_item	32	static
