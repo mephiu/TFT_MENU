@@ -377,9 +377,10 @@ uint8_t hagl_put_char(wchar_t code, int16_t x0, int16_t y0, color_t color, const
  * continue from the next line.
  */
 
-uint16_t hagl_put_text(const wchar_t *str, int16_t x0, int16_t y0, color_t color, const unsigned char *font)
+//uint16_t hagl_put_text(const wchar_t *str, int16_t x0, int16_t y0, color_t color, const unsigned char *font)
+uint16_t hagl_put_text(const char *str, int16_t x0, int16_t y0, color_t color, const unsigned char *font)
 {
-    wchar_t temp;
+    char temp;
     uint8_t status;
     uint16_t original = x0;
     fontx_meta_t meta;

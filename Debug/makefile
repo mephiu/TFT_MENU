@@ -55,8 +55,8 @@ all: main-build
 main-build: LCD_MENU_F401.elf secondary-outputs
 
 # Tool invocations
-LCD_MENU_F401.elf: $(OBJS) $(USER_OBJS) C:\Users\Adrian\STM32CubeIDE\workspace_1.5.1\LCD_MENU_F401\STM32F401CCUX_FLASH.ld
-	arm-none-eabi-gcc -o "LCD_MENU_F401.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Adrian\STM32CubeIDE\workspace_1.5.1\LCD_MENU_F401\STM32F401CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="LCD_MENU_F401.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+LCD_MENU_F401.elf: $(OBJS) $(USER_OBJS) C:\Users\abastrzyk\Desktop\TFT_MENU\STM32F401CCUX_FLASH.ld
+	arm-none-eabi-gcc -o "LCD_MENU_F401.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\abastrzyk\Desktop\TFT_MENU\STM32F401CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="LCD_MENU_F401.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

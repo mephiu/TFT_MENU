@@ -34,7 +34,7 @@ http://elm-chan.org/docs/dosv/fontx_e.html
 SPDX-License-Identifier: MIT
 
 */
-
+#pragma once
 #ifndef _HAGL_FONTX_H
 #define _HAGL_FONTX_H
 
