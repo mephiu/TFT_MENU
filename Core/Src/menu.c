@@ -40,9 +40,10 @@ void show_sensor_window() {
 
 
 void show_sensor_data(uint16_t sensor_data[]) {
-	show_sensor_window();
+//	show_sensor_window();
+	hagl_fill_rectangle(7, 27, LCD_WIDTH-7, LCD_HEIGHT-7, rgb565(0, 0, 0));
 	for (int var = 0; var < 8; ++var) {
-		snprintf(text_to_parse, 20, "Kanal %u: \t\t%u", var,	sensor_data[var]);
+		snprintf(text_to_parse, 16, "Kanal %u: \t\t%u", var,	sensor_data[var]);
 		hagl_put_text(text_to_parse, 10, 30 + var * 15, rgb565(15, 127, 225), font5x7);
 	}
 	lcd_copy();
