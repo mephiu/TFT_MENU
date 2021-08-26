@@ -1,3 +1,4 @@
+#pragma once
 /*
 
 FONTX version of the Public Domain X11 misc-fixed typeface.
