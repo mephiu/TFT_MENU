@@ -109,7 +109,7 @@ int main(void) {
 	MX_SPI2_Init();
 	MX_TIM2_Init();
 	/* USER CODE BEGIN 2 */
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensor_data, sizeof(sensor_data) / 2);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensor_data, sizeof(sensor_data) / sizeof(int16_t));
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 	lcd_init();
 //	show_main_menu(5, rgb565(255, 0, 0));

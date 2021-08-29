@@ -1622,7 +1622,7 @@ int main(void) {
 	MX_TIM2_Init();
  8000cec:	f000 fce6 	bl	80016bc <MX_TIM2_Init>
 	/* USER CODE BEGIN 2 */
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensor_data, sizeof(sensor_data) / 2);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensor_data, sizeof(sensor_data) / sizeof(int16_t));
  8000cf0:	2208      	movs	r2, #8
  8000cf2:	4921      	ldr	r1, [pc, #132]	; (8000d78 <main+0xb4>)
  8000cf4:	4821      	ldr	r0, [pc, #132]	; (8000d7c <main+0xb8>)
