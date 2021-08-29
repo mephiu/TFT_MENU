@@ -11,6 +11,9 @@
 #include "font5x7.h"
 
 char text_to_parse[16];
+static uint16_t ch_buffer[2];
+static uint16_t os_buffer[2];
+
 
 void show_menu_window() {
 	hagl_clear_screen();
@@ -25,6 +28,12 @@ void show_menu_window() {
 	hagl_put_text("Kalibracja", 10, 70, rgb565(0, 102, 204), font5x7);
 	hagl_put_text("Inne", 10, 90, rgb565(0, 102, 204), font5x7);
 	hagl_put_text("Powrot", 10, 110, rgb565(102, 255, 102), font5x7);
+	lcd_copy();
+}
+
+void update_channels_value(uint8_t activeChannels, uint16_t color){
+	snprintf(ch_buffer, 2, "%u", activeChannels);
+	hagl_put_text(ch_buffer, 90, 30, color, font5x7);
 	lcd_copy();
 }
 

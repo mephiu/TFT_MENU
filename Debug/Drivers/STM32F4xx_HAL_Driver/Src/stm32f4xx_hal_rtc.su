@@ -15,6 +15,11 @@ stm32f4xx_hal_rtc.c:1631:13:HAL_RTC_AlarmAEventCallback	16	static
 stm32f4xx_hal_rtc.c:1647:19:HAL_RTC_PollForAlarmAEvent	24	static
 stm32f4xx_hal_rtc.c:1709:19:HAL_RTC_WaitForSynchro	24	static
 stm32f4xx_hal_rtc.c:1755:21:HAL_RTC_GetState	16	static
-stm32f4xx_hal_rtc.c:1772:19:RTC_EnterInitMode	24	static
-stm32f4xx_hal_rtc.c:1804:9:RTC_ByteToBcd2	24	static
-stm32f4xx_hal_rtc.c:1822:9:RTC_Bcd2ToByte	24	static
+stm32f4xx_hal_rtc.c:1766:6:HAL_RTC_DST_Add1Hour	16	static
+stm32f4xx_hal_rtc.c:1779:6:HAL_RTC_DST_Sub1Hour	16	static
+stm32f4xx_hal_rtc.c:1792:6:HAL_RTC_DST_SetStoreOperation	16	static
+stm32f4xx_hal_rtc.c:1804:6:HAL_RTC_DST_ClearStoreOperation	16	static
+stm32f4xx_hal_rtc.c:1816:10:HAL_RTC_DST_ReadStoreOperation	16	static
+stm32f4xx_hal_rtc.c:1833:19:RTC_EnterInitMode	24	static
+stm32f4xx_hal_rtc.c:1865:9:RTC_ByteToBcd2	24	static
+stm32f4xx_hal_rtc.c:1883:9:RTC_Bcd2ToByte	24	static
