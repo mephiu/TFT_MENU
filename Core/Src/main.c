@@ -64,7 +64,7 @@ volatile uint8_t activeScreen = 0;
 volatile uint8_t sensorWindowFlag = 0;
 volatile uint8_t menuWindowFlag = 0;
 uint16_t sensor_data[8];
-uint8_t activeChannels = 4;
+int8_t activeChannels = 4;
 uint8_t oversamplingPrescaler = 1;
 
 volatile uint16_t lastEncoderValue;
@@ -150,15 +150,16 @@ int main(void)
 			deselect_item(currentMenuIndex);
 		}
 		if (activeScreen == 11){
-			if (lastEncoderValue != htim2.Instance->CNT){
-				activeChannels += (lastEncoderValue - htim2.Instance->CNT)/2;
-			}
+//			if (lastEncoderValue != htim2.Instance->CNT){
+//				activeChannels += (lastEncoderValue - htim2.Instance->CNT)/2;
+//			}
 			update_channels_value(activeChannels, rgb565(120, 120, 120));
-			lastEncoderValue = htim2.Instance->CNT;
+//			lastEncoderValue = htim2.Instance->CNT;
 		}
-		snprintf(debug_text, 25, "CNT:%u | active:%u", ((htim2.Instance->CNT) / 4), activeScreen);
+		snprintf(debug_text, 25, "MENU:%u | active:%d", currentMenuIndex, activeScreen);
 		hagl_put_text(debug_text, 10, 145, rgb565(245, 245, 255), font6x9);
 		lcd_copy();
+		HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
