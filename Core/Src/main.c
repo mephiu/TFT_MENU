@@ -54,13 +54,17 @@
 
 /* USER CODE BEGIN PV */
 volatile int16_t menuIndex = 0;
-int16_t lastMenuPos = 0;
 volatile int16_t menuMaxIndex = 0;
+int16_t lastMenuPos = 0;
 int16_t menu_pos[10];
-int16_t counterIndex;
-uint16_t sensor_data[8];
+
 uint16_t tim_data[10];
+int16_t counterIndex;
 volatile uint8_t activeScreen = 0;
+volatile uint8_t sensorWindowFlag = 0;
+volatile uint8_t menuWindowFlag = 0;
+uint16_t sensor_data[8];
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -120,8 +124,11 @@ int main(void) {
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
-
 		if (activeScreen == 0) {
+			if (sensorWindowFlag == 0){
+				sensorWindowFlag = 1;
+				show_sensor_window();
+			}
 			show_sensor_data(sensor_data);
 //			snprintf(tim_data, 10, "Tim:%u", htim2.Instance ->CNT);
 //			hagl_put_text(tim_data, 80, 50, rgb565(65, 95, 175), font6x9);
@@ -130,6 +137,11 @@ int main(void) {
 		if (activeScreen == 1) {
 			//pozostaje problem przejscia przez 0
 			menuMaxIndex = 5;
+			if (menuWindowFlag == 0){
+				menuWindowFlag = 1;
+				htim2.Instance->CNT = 1000;
+				show_menu_window();
+			}
 			menuIndex = (htim2.Instance->CNT / 2) % menuMaxIndex;
 //			snprintf(menu_pos, 10, "Tim:%d", (htim2.Instance->CNT / 2) % menuMaxIndex );
 //			hagl_put_text(menu_pos, 80, 50, rgb565(65, 95, 175), font6x9);
@@ -208,17 +220,24 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == ENC_BTN_Pin) {
 		while (HAL_GPIO_ReadPin(ENC_BTN_GPIO_Port, ENC_BTN_Pin)
-				== GPIO_PIN_RESET)
-			;
+				== GPIO_PIN_RESET);
+//		TIM_ResetCounter(&htim2);
+		//sensor window is active, gonna change to menu
 		if (activeScreen == 0) {
-			show_menu_window();
+			//reset counter
+
+			menuWindowFlag = 0;
+//			show_menu_window();
 			activeScreen = 1;
+		//menu window is active, gonna change to sensor
 		} else if (activeScreen == 1) {
 			if (menuIndex == menuMaxIndex - 1) {
-				show_sensor_window();
+				sensorWindowFlag = 0;
+//				show_sensor_window();
 				activeScreen = 0;
 			}
 		}
+
 	}
 }
 

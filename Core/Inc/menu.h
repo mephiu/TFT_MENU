@@ -10,3 +10,5 @@ void show_menu_window();
 void show_sensor_window();
 void show_sensor_data(uint16_t sensor_data[]);
 void show_misc_menu(void);
+void select_item(int index);
+void deselect_item(int index);

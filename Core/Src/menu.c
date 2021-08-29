@@ -14,6 +14,7 @@ char text_to_parse[16];
 
 void show_menu_window() {
 	hagl_clear_screen();
+
 	for (int i = 0; i < 5; ++i) {
 		hagl_draw_rounded_rectangle(i, i, LCD_WIDTH - i, LCD_HEIGHT - i,
 				5 - i, rgb565(255, 0, 0));

@@ -40,7 +40,8 @@ extern TIM_HandleTypeDef htim2;
 void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+uint32_t TIM_GetCounter(TIM_TypeDef* TIMx);
+void TIM_ResetCounter(TIM_TypeDef* TIMx);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

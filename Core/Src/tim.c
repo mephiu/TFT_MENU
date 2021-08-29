@@ -124,7 +124,25 @@ void HAL_TIM_Encoder_MspDeInit(TIM_HandleTypeDef* tim_encoderHandle)
 }
 
 /* USER CODE BEGIN 1 */
+uint32_t TIM_GetCounter(TIM_TypeDef* TIMx)
+{
+  /* Check the parameters */
+  assert_param(IS_TIM_ALL_PERIPH(TIMx));
 
+  /* Get the Counter Register value */
+  return TIMx->CNT;
+}
+
+
+void TIM_ResetCounter(TIM_TypeDef* TIMx)
+{
+  /* Check the parameters */
+  assert_param(IS_TIM_ALL_PERIPH(TIMx));
+
+  /* Reset the Counter Register value */
+  TIMx->CNT = 0;
+  assert_param(TIMx->CNT == 0);
+}
 /* USER CODE END 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
