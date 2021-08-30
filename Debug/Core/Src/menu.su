@@ -1,5 +1,6 @@
-menu.c:15:6:show_menu_window	48	static
-menu.c:32:6:show_sensor_window	48	static
-menu.c:43:6:show_sensor_data	40	static
-menu.c:54:6:select_item	32	static
-menu.c:60:6:deselect_item	32	static
+menu.c:18:6:show_menu_window	48	static
+menu.c:34:6:update_channels_value	24	static
+menu.c:41:6:show_sensor_window	48	static
+menu.c:52:6:show_sensor_data	40	static
+menu.c:63:6:select_item	32	static
+menu.c:69:6:deselect_item	32	static
