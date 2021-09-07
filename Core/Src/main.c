@@ -53,21 +53,17 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-volatile int16_t currentMenuIndex = 0;
-volatile int16_t menuMaxIndex = 0;
-//int16_t lastMenuPos = 0;
-//int16_t menu_pos[10];
-//int16_t counterIndex;
-//uint16_t tim_data[10];
+//volatile int16_t currentMenuIndex = 0;
+volatile int16_t menuMaxIndex = 5;
+volatile uint8_t encoderBtnFlag;
+uint8_t previousItem;
+uint8_t currentItem;
 
 volatile uint8_t activeScreen = 0;
-volatile uint8_t sensorWindowFlag = 0;
-volatile uint8_t menuWindowFlag = 0;
 uint16_t sensor_data[8];
 int8_t activeChannels = 4;
 uint8_t oversamplingPrescaler = 1;
 
-volatile uint16_t lastEncoderValue;
 char debug_text[25];
 /* USER CODE END PV */
 
@@ -118,7 +114,8 @@ int main(void)
   MX_SPI2_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensor_data, sizeof(sensor_data) / sizeof(int16_t));
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensor_data,
+			sizeof(sensor_data) / sizeof(int16_t));
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 	//start LCD
 	lcd_init();
@@ -128,49 +125,50 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
-		if (activeScreen == 0) {
-			if (sensorWindowFlag == 0){
-				sensorWindowFlag = 1;
-				show_sensor_window();
-			}
+		switch (activeScreen) {
+		case 0:
+			show_sensor_window();
 			show_sensor_data(sensor_data);
-			HAL_Delay(500);
-		}
-		if (activeScreen == 1) {
-			menuMaxIndex = 5;
-			if (menuWindowFlag == 0){
-				menuWindowFlag = 1;
-				htim2.Instance->CNT = 1000;
-				show_menu_window();
+			HAL_Delay(300);
+			break;
+		case 1:
+			currentItem = (__HAL_TIM_GET_COUNTER(&htim2)>>1) % menuMaxIndex;
+			assert(currentItem <= menuMaxIndex-1);
+			show_menu_window();
+			deselect_item(previousItem);
+			select_item(currentItem);
+			if (previousItem != currentItem) {
+				previousItem = currentItem;
 			}
-			currentMenuIndex = (htim2.Instance->CNT / 4) % menuMaxIndex;
-			select_item(currentMenuIndex);
-			lcd_copy();
-			HAL_Delay(50);
-			deselect_item(currentMenuIndex);
 		}
-		if (activeScreen == 11){
-//			if (lastEncoderValue != htim2.Instance->CNT){
-//				activeChannels += (lastEncoderValue - htim2.Instance->CNT)/2;
-//			}
-			update_channels_value(activeChannels, rgb565(120, 120, 120));
-//			lastEncoderValue = htim2.Instance->CNT;
+		if (encoderBtnFlag) {
+			encoderBtnFlag = 0;
+			switch (activeScreen) {
+			case 0:
+				__HAL_TIM_SET_COUNTER(&htim2, 0);
+				activeScreen = 1;
+				break;
+			case 1:
+				if (currentItem == (menuMaxIndex - 1)) {
+					activeScreen = 0;
+					break;
+				}
+			default:
+				break;
+			}
 		}
-		snprintf(debug_text, 25, "MENU:%u | active:%d", currentMenuIndex, activeScreen);
+
+		snprintf(debug_text, 25, "MENU:%u | active:%d", currentItem,
+				activeScreen);
 		hagl_put_text(debug_text, 10, 145, rgb565(245, 245, 255), font6x9);
 		lcd_copy();
-		HAL_Delay(500);
+		HAL_Delay(100);
+	}
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		//			snprintf(tim_data, 10, "Tim:%u", htim2.Instance ->CNT);
-		//			hagl_put_text(tim_data, 80, 50, rgb565(65, 95, 175), font6x9);
-		//			snprintf(menu_pos, 10, "Tim:%d", (htim2.Instance->CNT / 2) % menuMaxIndex );
-		//			hagl_put_text(menu_pos, 80, 50, rgb565(65, 95, 175), font6x9);
-		//			if (lastMenuPos != currentMenuIndex) deselect_item(lastMenuPos);
-		//			select_item(currentMenuIndex);
-		//			lcd_copy();
-	}
+
   /* USER CODE END 3 */
 }
 
@@ -221,58 +219,19 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
-	if (hspi == &hspi1) {
-		lcd_transfer_done();
-	}
+if (hspi == &hspi1) {
+	lcd_transfer_done();
+}
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	if (GPIO_Pin == ENC_BTN_Pin) {
-		while (HAL_GPIO_ReadPin(ENC_BTN_GPIO_Port, ENC_BTN_Pin)== GPIO_PIN_RESET){
+if (GPIO_Pin == ENC_BTN_Pin) {
+	while (HAL_GPIO_ReadPin(ENC_BTN_GPIO_Port, ENC_BTN_Pin) == GPIO_PIN_RESET) {
 
-		}
-		HAL_Delay(50); //basic debounce
-		switch (activeScreen) {
-			//sensor window is active, gonna change to menu
-			case 0:
-				//reset counter
-				menuWindowFlag = 0;
-				activeScreen = 1;
-				break;
-			case 1:
-				//menu window is active, gonna change to sensor
-				if (currentMenuIndex == menuMaxIndex - 1) {
-					sensorWindowFlag = 0;
-					activeScreen = 0;
-				}
-				if (currentMenuIndex == 0){
-//					htim2.Instance->CNT = 0;
-					activeScreen = 11;
-				}
-				break;
-			case 11:
-				htim2.Instance->CNT = 1000;
-				lastEncoderValue = htim2.Instance->CNT;
-				activeScreen = 1;
-			default:
-				break;
-		}
-//		//sensor window is active, gonna change to menu
-//		if (activeScreen == 0) {
-//			//reset counter
-//			menuWindowFlag = 0;
-//			activeScreen = 1;
-//
-//		} else if (activeScreen == 1) {
-//			//menu window is active, gonna change to sensor
-//			if (currentMenuIndex == menuMaxIndex - 1) {
-//				sensorWindowFlag = 0;
-//				activeScreen = 0;
-//			}
-//
-//
-//		}
 	}
+	HAL_Delay(50); //basic debounce
+	encoderBtnFlag = 1;
+}
 }
 
 /* USER CODE END 4 */
@@ -284,10 +243,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-	/* User can add his own implementation to report the HAL error return state */
-	__disable_irq();
-	while (1) {
-	}
+/* User can add his own implementation to report the HAL error return state */
+__disable_irq();
+while (1) {
+}
   /* USER CODE END Error_Handler_Debug */
 }
 
