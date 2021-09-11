@@ -7,9 +7,10 @@
 
 
 void show_menu_window();
-void show_sensor_window();
-void show_sensor_data(uint16_t sensor_data[]);
+//void show_sensor_window();
+void show_sensor_data(uint16_t sensor_data[], uint8_t activeChannels);
 void show_misc_menu(void);
 void select_item(int index);
 void deselect_item(int index);
 void update_channels_value(uint8_t activeChannels, uint16_t color);
+void update_oversampling_prescaler(uint8_t oversamplingPrescaler, uint16_t color);

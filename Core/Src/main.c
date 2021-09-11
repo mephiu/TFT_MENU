@@ -25,6 +25,7 @@
 #include "rtc.h"
 #include "spi.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -38,11 +39,21 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+int __io_putchar(int ch)
+{
+  if (ch == '\n') {
+    __io_putchar('\r');
+  }
 
+  HAL_UART_Transmit(&huart6, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
+
+  return 1;
+}
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -61,7 +72,7 @@ uint8_t currentItem;
 
 volatile uint8_t activeScreen = 0;
 uint16_t sensor_data[8];
-int8_t activeChannels = 4;
+uint8_t activeChannels = 4;
 uint8_t oversamplingPrescaler = 1;
 
 char debug_text[25];
@@ -113,13 +124,19 @@ int main(void)
   MX_RTC_Init();
   MX_SPI2_Init();
   MX_TIM2_Init();
+  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
+  //#ifdef DEBUG
+  	printf("Starting..\n");
+  	fflush(stdout);
+  //#endif
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensor_data,
 			sizeof(sensor_data) / sizeof(int16_t));
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 	//start LCD
 	lcd_init();
-	show_sensor_window();
+//	show_sensor_window();
+//	HAL_Delay(10000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -127,9 +144,10 @@ int main(void)
 	while (1) {
 		switch (activeScreen) {
 		case 0:
-			show_sensor_window();
-			show_sensor_data(sensor_data);
-			HAL_Delay(300);
+			show_sensor_data(sensor_data, activeChannels);
+			HAL_Delay(1000);
+			printf("Sensor data case executed.\n");
+			fflush(stdout);
 			break;
 		case 1:
 			currentItem = (__HAL_TIM_GET_COUNTER(&htim2)>>1) % menuMaxIndex;
@@ -140,28 +158,71 @@ int main(void)
 			if (previousItem != currentItem) {
 				previousItem = currentItem;
 			}
+			printf("Main menu case executed..\n");
+			fflush(stdout);
+			break;
+		case 2:
+			activeChannels = __HAL_TIM_GET_COUNTER(&htim2)>>1;
+			if (activeChannels < 1) activeChannels = 1;
+			if (activeChannels > 8) activeChannels = 8;
+			update_channels_value(activeChannels, rgb565(200, 200, 200));
+			printf("Active channels case executed..\n");
+			fflush(stdout);
+			break;
+		case 3:
+			oversamplingPrescaler = __HAL_TIM_GET_COUNTER(&htim2)>>1;
+			if (oversamplingPrescaler < 1) oversamplingPrescaler = 1;
+			if (oversamplingPrescaler > 15) oversamplingPrescaler = 15;
+			update_oversampling_prescaler(oversamplingPrescaler, rgb565(220, 220, 220));
+			printf("Oversampling case executed...\n");
+			fflush(stdout);
+			break;
 		}
 		if (encoderBtnFlag) {
 			encoderBtnFlag = 0;
 			switch (activeScreen) {
-			case 0:
+			case 0: //sensor to menu
 				__HAL_TIM_SET_COUNTER(&htim2, 0);
 				activeScreen = 1;
 				break;
-			case 1:
+			case 1:	//menu to ...
+				//menu to sensor
 				if (currentItem == (menuMaxIndex - 1)) {
 					activeScreen = 0;
 					break;
 				}
+				//menu to activechannels
+				else if (currentItem == 0) {
+					__HAL_TIM_GET_COUNTER(&htim2) = activeChannels*2; //you can't assign value to shifted value, hence no >> is used, silly me tried..
+					activeScreen = 2;
+					break;
+				}
+				else if (currentItem == 1) {
+					__HAL_TIM_GET_COUNTER(&htim2) = oversamplingPrescaler*2; //you can't assign value to shifted value, hence no >> is used, silly me tried..
+					activeScreen = 3;
+					break;
+				}
+			case 2:
+				__HAL_TIM_GET_COUNTER(&htim2) = 0;
+				activeScreen = 1;
+				break;
+			case 3:
+				__HAL_TIM_GET_COUNTER(&htim2) = 0;
+				activeScreen = 1;
+				break;
 			default:
 				break;
 			}
+			printf("Button interrupt executed....\n");
+			fflush(stdout);
 		}
 
 		snprintf(debug_text, 25, "MENU:%u | active:%d", currentItem,
 				activeScreen);
 		hagl_put_text(debug_text, 10, 145, rgb565(245, 245, 255), font6x9);
 		lcd_copy();
+		printf("Main while loop executed.............................\n");
+		fflush(stdout);
 		HAL_Delay(100);
 	}
 
