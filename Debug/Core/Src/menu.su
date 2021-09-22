@@ -1,6 +1,6 @@
 menu.c:17:6:show_menu_window	48	static
 menu.c:33:6:update_channels_value	56	static
 menu.c:45:6:update_oversampling_prescaler	56	static
-menu.c:68:6:show_sensor_data	56	static
-menu.c:84:6:select_item	32	static
-menu.c:89:6:deselect_item	32	static
+menu.c:60:6:show_sensor_data	56	static
+menu.c:76:6:select_item	32	static
+menu.c:81:6:deselect_item	32	static

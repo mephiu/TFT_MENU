@@ -126,10 +126,10 @@ int main(void)
   MX_TIM2_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-  //#ifdef DEBUG
+
   	printf("Starting..\n");
   	fflush(stdout);
-  //#endif
+
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensor_data,
 			sizeof(sensor_data) / sizeof(int16_t));
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
@@ -163,16 +163,28 @@ int main(void)
 			break;
 		case 2:
 			activeChannels = __HAL_TIM_GET_COUNTER(&htim2)>>1;
-			if (activeChannels < 1) activeChannels = 1;
-			if (activeChannels > 8) activeChannels = 8;
+			if (activeChannels < 1){
+				activeChannels = 1;
+				__HAL_TIM_SET_COUNTER(&htim2, 2);
+			}
+			if (activeChannels > 8) {
+				activeChannels = 8;
+				__HAL_TIM_SET_COUNTER(&htim2, 16);
+			}
 			update_channels_value(activeChannels, rgb565(200, 200, 200));
 			printf("Active channels case executed..\n");
 			fflush(stdout);
 			break;
 		case 3:
 			oversamplingPrescaler = __HAL_TIM_GET_COUNTER(&htim2)>>1;
-			if (oversamplingPrescaler < 1) oversamplingPrescaler = 1;
-			if (oversamplingPrescaler > 15) oversamplingPrescaler = 15;
+			if (oversamplingPrescaler < 1) {
+				oversamplingPrescaler = 1;
+				__HAL_TIM_SET_COUNTER(&htim2, 2);
+			}
+			if (oversamplingPrescaler > 15) {
+				oversamplingPrescaler = 15;
+				__HAL_TIM_SET_COUNTER(&htim2, 30);
+			}
 			update_oversampling_prescaler(oversamplingPrescaler, rgb565(220, 220, 220));
 			printf("Oversampling case executed...\n");
 			fflush(stdout);
