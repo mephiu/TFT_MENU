@@ -71,11 +71,13 @@ uint8_t previousItem;
 uint8_t currentItem;
 
 volatile uint8_t activeScreen = 0;
-uint16_t sensor_data[8];
+
 uint8_t activeChannels = 4;
 uint8_t oversamplingPrescaler = 1;
 
 char debug_text[25];
+uint16_t sensor_data[8];
+uint16_t *prepared_data;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -144,7 +146,8 @@ int main(void)
 	while (1) {
 		switch (activeScreen) {
 		case 0:
-			show_sensor_data(sensor_data, activeChannels);
+			prepared_data = prepare_data(oversamplingPrescaler, &sensor_data);
+			show_sensor_data(prepared_data, activeChannels);
 			HAL_Delay(1000);
 			printf("Sensor data case executed.\n");
 			fflush(stdout);

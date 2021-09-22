@@ -224,7 +224,9 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 }
 
 /* USER CODE BEGIN 1 */
-
+uint16_t* prepare_data(uint8_t oversamplingPrescaler, uint16_t* sensor_data){
+	return sensor_data;
+}
 /* USER CODE END 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
