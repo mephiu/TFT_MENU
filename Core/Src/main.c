@@ -77,7 +77,8 @@ uint8_t oversamplingPrescaler = 1;
 
 char debug_text[25];
 uint16_t sensor_data[8];
-uint16_t *prepared_data;
+uint16_t temp_data[8];
+uint16_t prepared_data[8];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -146,7 +147,17 @@ int main(void)
 	while (1) {
 		switch (activeScreen) {
 		case 0:
-			prepared_data = prepare_data(oversamplingPrescaler, &sensor_data);
+			for (int currentIter = 0; currentIter < oversamplingPrescaler; ++currentIter) {
+				for (int currentChan = 0; currentChan < activeChannels; ++currentChan) {
+					temp_data[currentChan] += sensor_data[currentChan];
+					assert_param(temp_data[currentChan] <= UINT16_MAX);
+				}
+				HAL_Delay(50);
+			}
+			for (int var = 0; var < activeChannels; ++var) {
+				prepared_data[var] = temp_data[var] / oversamplingPrescaler;
+				temp_data[var] = 0;
+			}
 			show_sensor_data(prepared_data, activeChannels);
 			HAL_Delay(1000);
 			printf("Sensor data case executed.\n");
@@ -186,7 +197,7 @@ int main(void)
 			}
 			if (oversamplingPrescaler > 15) {
 				oversamplingPrescaler = 15;
-				__HAL_TIM_SET_COUNTER(&htim2, 30);
+				__HAL_TIM_SET_COUNTER(&htim2, 30); //encoder counts up to 19 so 19*2 is max available value rn
 			}
 			update_oversampling_prescaler(oversamplingPrescaler, rgb565(220, 220, 220));
 			printf("Oversampling case executed...\n");
