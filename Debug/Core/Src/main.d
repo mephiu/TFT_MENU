@@ -35,8 +35,13 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/adc.h ../Core/Inc/main.h ../Core/Inc/dma.h ../Core/Inc/i2c.h \
- ../Core/Inc/rtc.h ../Core/Inc/spi.h ../Core/Inc/tim.h \
+ ../Core/Inc/adc.h ../Core/Inc/main.h ../Core/Inc/dma.h \
+ ../FATFS/App/fatfs.h ../Middlewares/Third_Party/FatFs/src/ff.h \
+ ../Middlewares/Third_Party/FatFs/src/integer.h ../FATFS/Target/ffconf.h \
+ ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h \
+ ../Middlewares/Third_Party/FatFs/src/diskio.h \
+ ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/user_diskio.h \
+ ../Core/Inc/i2c.h ../Core/Inc/rtc.h ../Core/Inc/spi.h ../Core/Inc/tim.h \
  ../Core/Inc/usart.h ../Core/Inc/gpio.h \
  C:/Users/Adrian/STM32CubeIDE/workspace_F401/LCD_MENU_F401/hagl/include/rgb565.h \
  C:/Users/Adrian/STM32CubeIDE/workspace_F401/LCD_MENU_F401/hagl/include/rgb888.h \
@@ -46,7 +51,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Core/Inc/hagl_hal.h ../Core/Inc/lcd.h \
  C:/Users/Adrian/STM32CubeIDE/workspace_F401/LCD_MENU_F401/hagl/include/bitmap.h \
  C:/Users/Adrian/STM32CubeIDE/workspace_F401/LCD_MENU_F401/hagl/include/bitmap.h \
- ../Core/Inc/menu.h
+ ../Core/Inc/menu.h ../Core/Inc/fatfs_sd.h
 
 ../Core/Inc/main.h:
 
@@ -128,6 +133,22 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 
 ../Core/Inc/dma.h:
 
+../FATFS/App/fatfs.h:
+
+../Middlewares/Third_Party/FatFs/src/ff.h:
+
+../Middlewares/Third_Party/FatFs/src/integer.h:
+
+../FATFS/Target/ffconf.h:
+
+../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h:
+
+../Middlewares/Third_Party/FatFs/src/diskio.h:
+
+../Middlewares/Third_Party/FatFs/src/ff.h:
+
+../FATFS/Target/user_diskio.h:
+
 ../Core/Inc/i2c.h:
 
 ../Core/Inc/rtc.h:
@@ -159,3 +180,5 @@ C:/Users/Adrian/STM32CubeIDE/workspace_F401/LCD_MENU_F401/hagl/include/bitmap.h:
 C:/Users/Adrian/STM32CubeIDE/workspace_F401/LCD_MENU_F401/hagl/include/bitmap.h:
 
 ../Core/Inc/menu.h:
+
+../Core/Inc/fatfs_sd.h:
