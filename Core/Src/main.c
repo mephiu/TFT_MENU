@@ -71,11 +71,14 @@ uint8_t previousItem;
 uint8_t currentItem;
 
 volatile uint8_t activeScreen = 0;
-uint16_t sensor_data[8];
+
 uint8_t activeChannels = 4;
 uint8_t oversamplingPrescaler = 1;
 
 char debug_text[25];
+uint16_t sensor_data[8];
+uint16_t temp_data[8];
+uint16_t prepared_data[8];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -126,10 +129,10 @@ int main(void)
   MX_TIM2_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-  //#ifdef DEBUG
+
   	printf("Starting..\n");
   	fflush(stdout);
-  //#endif
+
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensor_data,
 			sizeof(sensor_data) / sizeof(int16_t));
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
@@ -144,7 +147,18 @@ int main(void)
 	while (1) {
 		switch (activeScreen) {
 		case 0:
-			show_sensor_data(sensor_data, activeChannels);
+			for (int currentIter = 0; currentIter < oversamplingPrescaler; ++currentIter) {
+				for (int currentChan = 0; currentChan < activeChannels; ++currentChan) {
+					temp_data[currentChan] += sensor_data[currentChan];
+					assert_param(temp_data[currentChan] <= UINT16_MAX);
+				}
+				HAL_Delay(50);
+			}
+			for (int var = 0; var < activeChannels; ++var) {
+				prepared_data[var] = temp_data[var] / oversamplingPrescaler;
+				temp_data[var] = 0;
+			}
+			show_sensor_data(prepared_data, activeChannels);
 			HAL_Delay(1000);
 			printf("Sensor data case executed.\n");
 			fflush(stdout);
@@ -163,16 +177,28 @@ int main(void)
 			break;
 		case 2:
 			activeChannels = __HAL_TIM_GET_COUNTER(&htim2)>>1;
-			if (activeChannels < 1) activeChannels = 1;
-			if (activeChannels > 8) activeChannels = 8;
+			if (activeChannels < 1){
+				activeChannels = 1;
+				__HAL_TIM_SET_COUNTER(&htim2, 2);
+			}
+			if (activeChannels > 8) {
+				activeChannels = 8;
+				__HAL_TIM_SET_COUNTER(&htim2, 16);
+			}
 			update_channels_value(activeChannels, rgb565(200, 200, 200));
 			printf("Active channels case executed..\n");
 			fflush(stdout);
 			break;
 		case 3:
 			oversamplingPrescaler = __HAL_TIM_GET_COUNTER(&htim2)>>1;
-			if (oversamplingPrescaler < 1) oversamplingPrescaler = 1;
-			if (oversamplingPrescaler > 15) oversamplingPrescaler = 15;
+			if (oversamplingPrescaler < 1) {
+				oversamplingPrescaler = 1;
+				__HAL_TIM_SET_COUNTER(&htim2, 2);
+			}
+			if (oversamplingPrescaler > 15) {
+				oversamplingPrescaler = 15;
+				__HAL_TIM_SET_COUNTER(&htim2, 30); //encoder counts up to 19 so 19*2 is max available value rn
+			}
 			update_oversampling_prescaler(oversamplingPrescaler, rgb565(220, 220, 220));
 			printf("Oversampling case executed...\n");
 			fflush(stdout);

@@ -37,7 +37,7 @@ void update_channels_value(uint8_t activeChannels, uint16_t color) {
 					rgb565(255, 0, 0));
 		}
 	hagl_put_text("AKTYWNE KANALY", 20, 10, rgb565(255, 0, 0), font6x9);
-	snprintf(ch_buffer, 2, "%u", activeChannels);
+	snprintf(ch_buffer, 4, "%u", activeChannels);
 	hagl_put_text((char *)ch_buffer, 60, 50, color, font6x9);
 	lcd_copy();
 }
@@ -51,19 +51,11 @@ void update_oversampling_prescaler(uint8_t oversamplingPrescaler, uint16_t color
 	hagl_put_text("OVERSAMPLING", 30, 10, rgb565(255, 0, 0), font6x9);
 	hagl_put_text("Wybierz z ilu probek ", 15, 30, rgb565(0, 102, 204), font5x7);
 	hagl_put_text("  usredniac pomiar", 15, 40, rgb565(0, 102, 204), font5x7);
-	snprintf(os_buffer, 2, "%u", oversamplingPrescaler);
+	snprintf(os_buffer, 4, "%u", oversamplingPrescaler);
 	hagl_put_text((char *)os_buffer, 60, 70, color, font6x9);
 	lcd_copy();
 }
-//void show_sensor_window() {
-//	hagl_clear_screen();
-//	for (int i = 0; i < 5; ++i) {
-//		hagl_draw_rounded_rectangle(i, i, LCD_WIDTH - i, LCD_HEIGHT - i, 5 - i,
-//				rgb565(0, 51, 102));
-//	}
-//	hagl_put_text("DANE Z CZUJNIKOW", 10, 10, rgb565(15, 127, 225), font6x9);
-//	lcd_copy();
-//}
+
 
 void show_sensor_data(uint16_t sensor_data[], uint8_t activeChannels) {
 	hagl_clear_screen();

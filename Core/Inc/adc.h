@@ -40,7 +40,7 @@ extern ADC_HandleTypeDef hadc1;
 void MX_ADC1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+//uint16_t* prepare_data(uint8_t oversamplingPrescaler, uint16_t* sensor_data);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
