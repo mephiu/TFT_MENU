@@ -43,15 +43,14 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-int __io_putchar(int ch)
-{
-  if (ch == '\n') {
-    __io_putchar('\r');
-  }
+int __io_putchar(int ch) {
+	if (ch == '\n') {
+		__io_putchar('\r');
+	}
 
-  HAL_UART_Transmit(&huart6, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
+	HAL_UART_Transmit(&huart6, (uint8_t*) &ch, 1, HAL_MAX_DELAY);
 
-  return 1;
+	return 1;
 }
 /* USER CODE END PTD */
 
@@ -69,20 +68,20 @@ int __io_putchar(int ch)
 
 /* USER CODE BEGIN PV */
 //volatile int16_t currentMenuIndex = 0;
-volatile int16_t menuMaxIndex = 5;
-volatile uint8_t encoderBtnFlag;
-uint8_t previousItem;
+volatile int16_t menuMaxIndex = 5; //max number of selectable items on screen - menu
+volatile uint8_t encoderBtnFlag;	//flag for button interrupt
+uint8_t previousItem;		//needed for correct display of selected menu item
 uint8_t currentItem;
 
-volatile uint8_t activeScreen = 0;
+volatile uint8_t activeScreen = 0;	//curent screen that is being shown
 
 uint8_t activeChannels = 4;
 uint8_t oversamplingPrescaler = 1;
 
-char debug_text[25];
-uint16_t sensor_data[8];
-uint16_t temp_data[8];
-uint16_t prepared_data[8];
+char debug_text[25]; //bottom line text, just for debug
+uint16_t sensor_data[8];			//raw adc data
+uint16_t summed_data[8];			//accu for adc data, needed for oversampling
+uint16_t averaged_data[8];			//averaged adc data
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -105,239 +104,250 @@ DWORD fre_clust;
 uint32_t total, free_space;
 
 #define BUFFER_SIZE 128
-char buffer[BUFFER_SIZE];  // to store strings..
+char buffer[BUFFER_SIZE];  // to store uart statuses
 
-int i=0;
+int i = 0;
 
-int bufsize (char *buf)
-{
-	int i=0;
-	while (*buf++ != '\0') i++;
+int bufsize(char *buf) {
+	int i = 0;
+	while (*buf++ != '\0')
+		i++;
 	return i;
 }
 
-void clear_buffer (void)
-{
-	for (int i=0; i<BUFFER_SIZE; i++) buffer[i] = '\0';
+void clear_buffer(void) {
+	for (int i = 0; i < BUFFER_SIZE; i++)
+		buffer[i] = '\0';
 }
 
-void send_uart (char *string)
-{
-	uint8_t len = strlen (string);
-	HAL_UART_Transmit(&huart6, (uint8_t *) string, len, HAL_MAX_DELAY);  // transmit in blocking mode
+void sd_card_mount(void) {
+	fresult = f_mount(&fs, "/", 1);
+	if (fresult != FR_OK)
+		printf("ERROR!!! in mounting SD CARD...\n\n");
+	else
+		printf("SD CARD mounted successfully...\n\n");
+}
+
+void sd_card_unmount(void) {
+	/* Unmount SDCARD */
+	fresult = f_mount(NULL, "/", 1);
+	if (fresult == FR_OK)
+		printf("SD CARD UNMOUNTED successfully...\n");
+}
+
+void sd_card_check_capacity(void) {
+	f_getfree("", &fre_clust, &pfs);
+	total = (uint32_t) ((pfs->n_fatent - 2) * pfs->csize * 0.5);
+	sprintf(buffer, "SD CARD Total Size: \t%lu\n", total);
+	printf(buffer);
+	clear_buffer();
+	free_space = (uint32_t) (fre_clust * pfs->csize * 0.5);
+	sprintf(buffer, "SD CARD Free Space: \t%lu\n\n", free_space);
+	printf(buffer);
+	clear_buffer();
+}
+
+void sd_card_basic_write_to_file(char *filename) {
+	/* Open file to write/ create a file if it doesn't exist */
+	fresult = f_open(&fil, filename, FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
+
+	/* Writing text */
+	f_puts(
+			"DateTime - Channel 0 - Channel 1 - Channel 2 - Channel 3 - Channel 4 - Channel 5 - Channel 6 - Channel 7\n",
+			&fil);
+
+	/* Close file */
+	fresult = f_close(&fil);
+
+	if (fresult == FR_OK)
+		printf("READINGS.txt created and the data is written \n");
+
+}
+
+void sd_card_basic_read_file(void) {
+	/* Open file to read */
+	fresult = f_open(&fil, "READINGS.txt", FA_READ);
+
+	/* Read string from the file */
+	f_gets(buffer, f_size(&fil), &fil);
+
+	printf("READINGS.txt is opened and it contains the data as shown below\n");
+	printf(buffer);
+	printf("\n\n");
+
+	/* Close file */
+	f_close(&fil);
+
+	clear_buffer();
+}
+
+void sd_card_write_to_file(char *filename) {
+	/* Create second file with read write access and open it */
+	fresult = f_open(&fil, filename, FA_CREATE_ALWAYS | FA_WRITE);
+
+	/* Writing text */
+	strcpy(buffer, "This is file with measurements\n");
+
+	fresult = f_write(&fil, buffer, bufsize(buffer), &bw);
+
+	printf("datetime.txt created and data is written\n");
+
+	/* Close file */
+	f_close(&fil);
+
+	// clearing buffer to show that result obtained is from the file
+	clear_buffer();
+}
+
+void sd_card_read_file(char *filename) {
+	/* Open second file to read */
+	fresult = f_open(&fil, filename, FA_READ);
+	if (fresult == FR_OK)
+		printf("filename is open and the data is shown below\n");
+
+	/* Read data from the file
+	 * Please see the function details for the arguments */
+	f_read(&fil, buffer, f_size(&fil), &br);
+	printf(buffer);
+	printf("\n\n");
+
+	/* Close file */
+	f_close(&fil);
+
+	clear_buffer();
+}
+
+void sd_card_update_file(char *filename, uint16_t *measurements) {
+	/* Open the file with write access */
+	fresult = f_open(&fil, filename, FA_OPEN_EXISTING | FA_READ | FA_WRITE);
+
+	/* Move to offset to the end of the file */
+	fresult = f_lseek(&fil, f_size(&fil));
+
+	if (fresult == FR_OK)
+		printf("About to update the filename.txt\n");
+
+	/* write the string to the file */
+	snprintf(buffer, sizeof(buffer),
+			"01/01/2021 - %d - %d - %d - %d - %d - %d - %d - %d\n",
+			measurements[0], measurements[1], measurements[2], measurements[3],
+			measurements[4], measurements[5], measurements[6], measurements[7]);
+	fresult = f_puts(buffer, &fil);
+
+	f_close(&fil);
+
+	clear_buffer();
+}
+
+void sd_card_read_from_file(char *filename) {
+	/* Open to read the file */
+	fresult = f_open(&fil, filename, FA_READ);
+
+	/* Read string from the file */
+	fresult = f_read(&fil, buffer, f_size(&fil), &br);
+	if (fresult == FR_OK)
+		printf("Below is the data from updated file2.txt\n");
+	printf(buffer);
+	printf("\n\n");
+
+	/* Close file */
+	f_close(&fil);
+
+	clear_buffer();
+}
+
+void sd_card_remove_file(char *filename) {
+	fresult = f_unlink(filename);
+	if (fresult == FR_OK)
+		printf("filename.txt removed successfully...\n");
 }
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void)
-{
-  /* USER CODE BEGIN 1 */
+ * @brief  The application entry point.
+ * @retval int
+ */
+int main(void) {
+	/* USER CODE BEGIN 1 */
 
-  /* USER CODE END 1 */
+	/* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
+	/* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+	HAL_Init();
 
-  /* USER CODE BEGIN Init */
+	/* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+	/* USER CODE END Init */
 
-  /* Configure the system clock */
-  SystemClock_Config();
+	/* Configure the system clock */
+	SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
+	/* USER CODE BEGIN SysInit */
 
-  /* USER CODE END SysInit */
+	/* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_DMA_Init();
-  MX_SPI1_Init();
-  MX_ADC1_Init();
-  MX_I2C1_Init();
-  MX_RTC_Init();
-  MX_SPI2_Init();
-  MX_TIM2_Init();
-  MX_USART6_UART_Init();
-  MX_FATFS_Init();
-  /* USER CODE BEGIN 2 */
+	/* Initialize all configured peripherals */
+	MX_GPIO_Init();
+	MX_DMA_Init();
+	MX_SPI1_Init();
+	MX_ADC1_Init();
+	MX_I2C1_Init();
+	MX_RTC_Init();
+	MX_SPI2_Init();
+	MX_TIM2_Init();
+	MX_USART6_UART_Init();
+	MX_FATFS_Init();
+	/* USER CODE BEGIN 2 */
 //*******************************************************SD_CARD FUNCTIONS**************************************
-  HAL_Delay (500);
+	HAL_Delay(500);
 
-  fresult = f_mount(&fs, "/", 1);
-  	if (fresult != FR_OK) send_uart ("ERROR!!! in mounting SD CARD...\n\n");
-  	else send_uart("SD CARD mounted successfully...\n\n");
-
-
-  	/*************** Card capacity details ********************/
-
-  	/* Check free space */
-  	f_getfree("", &fre_clust, &pfs);
-
-  	total = (uint32_t)((pfs->n_fatent - 2) * pfs->csize * 0.5);
-  	sprintf (buffer, "SD CARD Total Size: \t%lu\n",total);
-  	send_uart(buffer);
-  	clear_buffer();
-  	free_space = (uint32_t)(fre_clust * pfs->csize * 0.5);
-  	sprintf (buffer, "SD CARD Free Space: \t%lu\n\n",free_space);
-  	send_uart(buffer);
-  	clear_buffer();
-
-
-
-  	/************* The following operation is using PUTS and GETS *********************/
-
-  	/* Open file to write/ create a file if it doesn't exist */
-      fresult = f_open(&fil, "file1.txt", FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
-
-  	/* Writing text */
-  	f_puts("This data is from the FILE1.txt. And it was written using ...f_puts... ", &fil);
-
-  	/* Close file */
-  	fresult = f_close(&fil);
-
-  	if (fresult == FR_OK)send_uart ("File1.txt created and the data is written \n");
-
-  	/* Open file to read */
-  	fresult = f_open(&fil, "file1.txt", FA_READ);
-
-  	/* Read string from the file */
-  	f_gets(buffer, f_size(&fil), &fil);
-
-  	send_uart("File1.txt is opened and it contains the data as shown below\n");
-  	send_uart(buffer);
-  	send_uart("\n\n");
-
-  	/* Close file */
-  	f_close(&fil);
-
-  	clear_buffer();
-
-
-
-
-  	/**************** The following operation is using f_write and f_read **************************/
-
-  	/* Create second file with read write access and open it */
-  	fresult = f_open(&fil, "file2.txt", FA_CREATE_ALWAYS | FA_WRITE);
-
-  	/* Writing text */
-  	strcpy (buffer, "This is File2.txt, written using ...f_write... and it says Hello from Controllerstech\n");
-
-  	fresult = f_write(&fil, buffer, bufsize(buffer), &bw);
-
-  	send_uart ("File2.txt created and data is written\n");
-
-  	/* Close file */
-  	f_close(&fil);
-
-
-
-  	// clearing buffer to show that result obtained is from the file
-  	clear_buffer();
-
-  	/* Open second file to read */
-  	fresult = f_open(&fil, "file2.txt", FA_READ);
-  	if (fresult == FR_OK)send_uart ("file2.txt is open and the data is shown below\n");
-
-  	/* Read data from the file
-  	 * Please see the function details for the arguments */
-  	f_read (&fil, buffer, f_size(&fil), &br);
-  	send_uart(buffer);
-  	send_uart("\n\n");
-
-  	/* Close file */
-  	f_close(&fil);
-
-  	clear_buffer();
-
-
-  	/*********************UPDATING an existing file ***************************/
-
-  	/* Open the file with write access */
-  	fresult = f_open(&fil, "file2.txt", FA_OPEN_EXISTING | FA_READ | FA_WRITE);
-
-  	/* Move to offset to the end of the file */
-  	fresult = f_lseek(&fil, f_size(&fil));
-
-  	if (fresult == FR_OK)send_uart ("About to update the file2.txt\n");
-
-  	/* write the string to the file */
-  	fresult = f_puts("This is updated data and it should be in the end", &fil);
-
-  	f_close (&fil);
-
-  	clear_buffer();
-
-  	/* Open to read the file */
-  	fresult = f_open (&fil, "file2.txt", FA_READ);
-
-  	/* Read string from the file */
-  	fresult = f_read (&fil, buffer, f_size(&fil), &br);
-  	if (fresult == FR_OK)send_uart ("Below is the data from updated file2.txt\n");
-  	send_uart(buffer);
-  	send_uart("\n\n");
-
-  	/* Close file */
-  	f_close(&fil);
-
-  	clear_buffer();
-
-
-  	/*************************REMOVING FILES FROM THE DIRECTORY ****************************/
-
-  	fresult = f_unlink("/file1.txt");
-  	if (fresult == FR_OK) send_uart("file1.txt removed successfully...\n");
-
-  	fresult = f_unlink("/file2.txt");
-  	if (fresult == FR_OK) send_uart("file2.txt removed successfully...\n");
-
-  	/* Unmount SDCARD */
-  	fresult = f_mount(NULL, "/", 1);
-  	if (fresult == FR_OK) send_uart ("SD CARD UNMOUNTED successfully...\n");
-
+	/*************** Card capacity details ********************/
+	sd_card_mount();
+	/* Check free space */
+	sd_card_check_capacity();
 
 //*******************************************************SD_CARD FUNCTIONS**************************************
-  	printf("Starting..\n");
-  	fflush(stdout);
+	printf("Starting..\n");
+	fflush(stdout);
 
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensor_data,
 			sizeof(sensor_data) / sizeof(int16_t));
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 	//start LCD
 	lcd_init();
+	//generate filename from RTC
+	sd_card_basic_write_to_file("POMIARY.txt");
+	/* USER CODE END 2 */
 
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+	/* Infinite loop */
+	/* USER CODE BEGIN WHILE */
 	while (1) {
 		switch (activeScreen) {
 		case 0:
-			for (int currentIter = 0; currentIter < oversamplingPrescaler; ++currentIter) {
-				for (int currentChan = 0; currentChan < activeChannels; ++currentChan) {
-					temp_data[currentChan] += sensor_data[currentChan];
-					assert_param(temp_data[currentChan] <= UINT16_MAX);
+			for (int currentIter = 0; currentIter < oversamplingPrescaler;
+					++currentIter) {
+				for (int currentChan = 0; currentChan < activeChannels;
+						++currentChan) {
+					summed_data[currentChan] += sensor_data[currentChan];
+					assert_param(summed_data[currentChan] <= UINT16_MAX);
 				}
 				HAL_Delay(50);
 			}
 			for (int var = 0; var < activeChannels; ++var) {
-				prepared_data[var] = temp_data[var] / oversamplingPrescaler;
-				temp_data[var] = 0;
+				averaged_data[var] = summed_data[var] / oversamplingPrescaler;
+				summed_data[var] = 0;
 			}
-			show_sensor_data(prepared_data, activeChannels);
+			show_sensor_data(averaged_data, activeChannels);
+			sd_card_update_file("POMIARY.txt", averaged_data);
 			HAL_Delay(1000);
 			printf("Sensor data case executed.\n");
 			fflush(stdout);
 			break;
 		case 1:
-			currentItem = (__HAL_TIM_GET_COUNTER(&htim2)>>1) % menuMaxIndex;
-			assert(currentItem <= menuMaxIndex-1);
+			currentItem = (__HAL_TIM_GET_COUNTER(&htim2) >> 1) % menuMaxIndex;
+			assert(currentItem <= menuMaxIndex - 1);
 			show_menu_window();
 			deselect_item(previousItem);
 			select_item(currentItem);
@@ -348,8 +358,8 @@ int main(void)
 			fflush(stdout);
 			break;
 		case 2:
-			activeChannels = __HAL_TIM_GET_COUNTER(&htim2)>>1;
-			if (activeChannels < 1){
+			activeChannels = __HAL_TIM_GET_COUNTER(&htim2) >> 1;
+			if (activeChannels < 1) {
 				activeChannels = 1;
 				__HAL_TIM_SET_COUNTER(&htim2, 2);
 			}
@@ -362,7 +372,7 @@ int main(void)
 			fflush(stdout);
 			break;
 		case 3:
-			oversamplingPrescaler = __HAL_TIM_GET_COUNTER(&htim2)>>1;
+			oversamplingPrescaler = __HAL_TIM_GET_COUNTER(&htim2) >> 1;
 			if (oversamplingPrescaler < 1) {
 				oversamplingPrescaler = 1;
 				__HAL_TIM_SET_COUNTER(&htim2, 2);
@@ -371,7 +381,8 @@ int main(void)
 				oversamplingPrescaler = 15;
 				__HAL_TIM_SET_COUNTER(&htim2, 30); //encoder counts up to 19 so 19*2 is max available value rn
 			}
-			update_oversampling_prescaler(oversamplingPrescaler, rgb565(220, 220, 220));
+			update_oversampling_prescaler(oversamplingPrescaler,
+					rgb565(220, 220, 220));
 			printf("Oversampling case executed...\n");
 			fflush(stdout);
 			break;
@@ -391,12 +402,11 @@ int main(void)
 				}
 				//menu to activechannels
 				else if (currentItem == 0) {
-					__HAL_TIM_GET_COUNTER(&htim2) = activeChannels*2; //you can't assign value to shifted value, hence no >> is used, silly me tried..
+					__HAL_TIM_GET_COUNTER(&htim2) = activeChannels * 2; //you can't assign value to shifted value, hence no >> is used, silly me tried..
 					activeScreen = 2;
 					break;
-				}
-				else if (currentItem == 1) {
-					__HAL_TIM_GET_COUNTER(&htim2) = oversamplingPrescaler*2; //you can't assign value to shifted value, hence no >> is used, silly me tried..
+				} else if (currentItem == 1) {
+					__HAL_TIM_GET_COUNTER(&htim2) = oversamplingPrescaler * 2; //you can't assign value to shifted value, hence no >> is used, silly me tried..
 					activeScreen = 3;
 					break;
 				}
@@ -424,89 +434,87 @@ int main(void)
 		HAL_Delay(100);
 	}
 
-    /* USER CODE END WHILE */
+	/* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
+	/* USER CODE BEGIN 3 */
 
-  /* USER CODE END 3 */
+	/* USER CODE END 3 */
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+ * @brief System Clock Configuration
+ * @retval None
+ */
+void SystemClock_Config(void) {
+	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
+	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
 
-  /** Configure the main internal regulator output voltage
-  */
-  __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 84;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+	/** Configure the main internal regulator output voltage
+	 */
+	__HAL_RCC_PWR_CLK_ENABLE();
+	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
+	/** Initializes the RCC Oscillators according to the specified parameters
+	 * in the RCC_OscInitTypeDef structure.
+	 */
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI
+			| RCC_OSCILLATORTYPE_LSI;
+	RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+	RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+	RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+	RCC_OscInitStruct.PLL.PLLM = 8;
+	RCC_OscInitStruct.PLL.PLLN = 84;
+	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+	RCC_OscInitStruct.PLL.PLLQ = 4;
+	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+		Error_Handler();
+	}
+	/** Initializes the CPU, AHB and APB buses clocks
+	 */
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+			| RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
+		Error_Handler();
+	}
 }
 
 /* USER CODE BEGIN 4 */
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
-if (hspi == &hspi1) {
-	lcd_transfer_done();
-}
+	if (hspi == &hspi1) {
+		lcd_transfer_done();
+	}
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-if (GPIO_Pin == ENC_BTN_Pin) {
-	while (HAL_GPIO_ReadPin(ENC_BTN_GPIO_Port, ENC_BTN_Pin) == GPIO_PIN_RESET) {
+	if (GPIO_Pin == ENC_BTN_Pin) {
+		while (HAL_GPIO_ReadPin(ENC_BTN_GPIO_Port, ENC_BTN_Pin)
+				== GPIO_PIN_RESET) {
 
+		}
+		HAL_Delay(50); //basic debounce
+		encoderBtnFlag = 1;
 	}
-	HAL_Delay(50); //basic debounce
-	encoderBtnFlag = 1;
-}
 }
 
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
-void Error_Handler(void)
-{
-  /* USER CODE BEGIN Error_Handler_Debug */
-/* User can add his own implementation to report the HAL error return state */
-__disable_irq();
-while (1) {
-}
-  /* USER CODE END Error_Handler_Debug */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
+void Error_Handler(void) {
+	/* USER CODE BEGIN Error_Handler_Debug */
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
+	}
+	/* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef  USE_FULL_ASSERT
