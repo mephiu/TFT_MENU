@@ -7,6 +7,7 @@
 
 
 void show_menu_window();
+void show_misc_menu();
 //void show_sensor_window();
 void show_sensor_data(uint16_t sensor_data[], uint8_t activeChannels);
 void show_misc_menu(void);

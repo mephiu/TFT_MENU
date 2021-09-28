@@ -324,8 +324,9 @@ int main(void) {
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
+		//************************CHANGING SCREENS************************
 		switch (activeScreen) {
-		case 0:
+		case 0:  //ADC data screen
 			for (int currentIter = 0; currentIter < oversamplingPrescaler;
 					++currentIter) {
 				for (int currentChan = 0; currentChan < activeChannels;
@@ -345,7 +346,7 @@ int main(void) {
 			printf("Sensor data case executed.\n");
 			fflush(stdout);
 			break;
-		case 1:
+		case 1:  //main menu screen
 			currentItem = (__HAL_TIM_GET_COUNTER(&htim2) >> 1) % menuMaxIndex;
 			assert(currentItem <= menuMaxIndex - 1);
 			show_menu_window();
@@ -357,7 +358,7 @@ int main(void) {
 			printf("Main menu case executed..\n");
 			fflush(stdout);
 			break;
-		case 2:
+		case 11:  //active channels selection screen
 			activeChannels = __HAL_TIM_GET_COUNTER(&htim2) >> 1;
 			if (activeChannels < 1) {
 				activeChannels = 1;
@@ -371,7 +372,7 @@ int main(void) {
 			printf("Active channels case executed..\n");
 			fflush(stdout);
 			break;
-		case 3:
+		case 12:  //oversampling selection screen
 			oversamplingPrescaler = __HAL_TIM_GET_COUNTER(&htim2) >> 1;
 			if (oversamplingPrescaler < 1) {
 				oversamplingPrescaler = 1;
@@ -386,13 +387,25 @@ int main(void) {
 			printf("Oversampling case executed...\n");
 			fflush(stdout);
 			break;
+		case 14:
+			currentItem = (__HAL_TIM_GET_COUNTER(&htim2) >> 1) % menuMaxIndex;
+			assert(currentItem <= menuMaxIndex - 1);
+			show_misc_menu();
+			deselect_item(previousItem);
+			select_item(currentItem);
+			if (previousItem != currentItem) {
+				previousItem = currentItem;
+			}
+			break;
 		}
+		//************************CHANGING SCREENS************************
 		if (encoderBtnFlag) {
 			encoderBtnFlag = 0;
 			switch (activeScreen) {
 			case 0: //sensor to menu
 				__HAL_TIM_SET_COUNTER(&htim2, 0);
 				activeScreen = 1;
+				menuMaxIndex = 5;
 				break;
 			case 1:	//menu to ...
 				//menu to sensor
@@ -403,26 +416,39 @@ int main(void) {
 				//menu to activechannels
 				else if (currentItem == 0) {
 					__HAL_TIM_GET_COUNTER(&htim2) = activeChannels * 2; //you can't assign value to shifted value, hence no >> is used, silly me tried..
-					activeScreen = 2;
+					activeScreen = 11;
 					break;
 				} else if (currentItem == 1) {
 					__HAL_TIM_GET_COUNTER(&htim2) = oversamplingPrescaler * 2; //you can't assign value to shifted value, hence no >> is used, silly me tried..
-					activeScreen = 3;
+					activeScreen = 12;
+					break;
+				} else if (currentItem == 3) {
+					activeScreen = 14;
+					__HAL_TIM_GET_COUNTER(&htim2) = 0;
+					menuMaxIndex = 4;
 					break;
 				}
-			case 2:
+			case 11: //channels to main menu
 				__HAL_TIM_GET_COUNTER(&htim2) = 0;
 				activeScreen = 1;
 				break;
-			case 3:
+			case 12: //sampling to main menu
 				__HAL_TIM_GET_COUNTER(&htim2) = 0;
 				activeScreen = 1;
 				break;
+			case 14: //misc menu to main menu
+				if (currentItem == (menuMaxIndex - 1)) {
+					activeScreen = 1;
+					menuMaxIndex = 5;
+					__HAL_TIM_GET_COUNTER(&htim2) = 0;
+					activeScreen = 1;
+					break;
 			default:
-				break;
+					break;
+				}
+				printf("Button interrupt executed....\n");
+				fflush(stdout);
 			}
-			printf("Button interrupt executed....\n");
-			fflush(stdout);
 		}
 
 		snprintf(debug_text, 25, "MENU:%u | active:%d", currentItem,
@@ -493,11 +519,11 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == ENC_BTN_Pin) {
+		HAL_Delay(50); //basic debounce
 		while (HAL_GPIO_ReadPin(ENC_BTN_GPIO_Port, ENC_BTN_Pin)
 				== GPIO_PIN_RESET) {
 
 		}
-		HAL_Delay(50); //basic debounce
 		encoderBtnFlag = 1;
 	}
 }

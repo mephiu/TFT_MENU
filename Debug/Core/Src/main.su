@@ -12,7 +12,7 @@ main.c:220:6:sd_card_update_file	64	static
 main.c:242:6:sd_card_read_from_file	16	static
 main.c:259:6:sd_card_remove_file	16	static
 main.c:270:5:main	40	static
-main.c:451:6:SystemClock_Config	88	static
-main.c:491:6:HAL_SPI_TxCpltCallback	16	static
-main.c:497:6:HAL_GPIO_EXTI_Callback	16	static
-main.c:514:6:Error_Handler	4	static,ignoring_inline_asm
+main.c:474:6:SystemClock_Config	88	static
+main.c:514:6:HAL_SPI_TxCpltCallback	16	static
+main.c:520:6:HAL_GPIO_EXTI_Callback	16	static
+main.c:537:6:Error_Handler	4	static,ignoring_inline_asm
