@@ -82,6 +82,9 @@ char debug_text[25]; //bottom line text, just for debug
 uint16_t sensor_data[8];			//raw adc data
 uint16_t summed_data[8];			//accu for adc data, needed for oversampling
 uint16_t averaged_data[8];			//averaged adc data
+
+uint8_t datetime[12] = {2, 0, 2, 1, 1, 2, 1, 5, 1, 7, 5, 9};
+uint8_t datetimeIndex;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -349,7 +352,7 @@ int main(void) {
 		case 1:  //main menu screen
 			currentItem = (__HAL_TIM_GET_COUNTER(&htim2) >> 1) % menuMaxIndex;
 			assert(currentItem <= menuMaxIndex - 1);
-			show_menu_window();
+			show_main_menu();
 			deselect_item(previousItem);
 			select_item(currentItem);
 			if (previousItem != currentItem) {
@@ -368,7 +371,7 @@ int main(void) {
 				activeChannels = 8;
 				__HAL_TIM_SET_COUNTER(&htim2, 16);
 			}
-			update_channels_value(activeChannels, rgb565(200, 200, 200));
+			set_channels_value(activeChannels, rgb565(200, 200, 200));
 			printf("Active channels case executed..\n");
 			fflush(stdout);
 			break;
@@ -382,7 +385,7 @@ int main(void) {
 				oversamplingPrescaler = 15;
 				__HAL_TIM_SET_COUNTER(&htim2, 30); //encoder counts up to 19 so 19*2 is max available value rn
 			}
-			update_oversampling_prescaler(oversamplingPrescaler,
+			set_oversampling_prescaler(oversamplingPrescaler,
 					rgb565(220, 220, 220));
 			printf("Oversampling case executed...\n");
 			fflush(stdout);
@@ -396,6 +399,11 @@ int main(void) {
 			if (previousItem != currentItem) {
 				previousItem = currentItem;
 			}
+			break;
+		case 41:
+			currentItem = __HAL_TIM_GET_COUNTER(&htim2) >> 1;
+			datetime[datetimeIndex] = currentItem % 10;
+			set_datetime_screen(datetimeIndex, datetime);
 			break;
 		}
 		//************************CHANGING SCREENS************************
@@ -425,7 +433,7 @@ int main(void) {
 				} else if (currentItem == 3) {
 					activeScreen = 14;
 					__HAL_TIM_GET_COUNTER(&htim2) = 0;
-					menuMaxIndex = 4;
+					menuMaxIndex = 3;
 					break;
 				}
 			case 11: //channels to main menu
@@ -438,17 +446,30 @@ int main(void) {
 				break;
 			case 14: //misc menu to main menu
 				if (currentItem == (menuMaxIndex - 1)) {
-					activeScreen = 1;
 					menuMaxIndex = 5;
 					__HAL_TIM_GET_COUNTER(&htim2) = 0;
 					activeScreen = 1;
 					break;
-			default:
+				}
+				if (currentItem == 0) {
+					datetimeIndex = 0;
+					__HAL_TIM_GET_COUNTER(&htim2) = 0;
+					activeScreen = 41; //switch to datetime screen
 					break;
 				}
-				printf("Button interrupt executed....\n");
-				fflush(stdout);
+			case 41: //set datetime to misc menu
+				//iterate over each symbol 2021-12-20 17:56 - 12 symbols to iterate through
+				while (datetimeIndex >= 12){
+					activeScreen = 14;
+					datetimeIndex = 0;
+				}
+				datetimeIndex++;
+				break;
+			default:
+				break;
 			}
+			printf("Button interrupt executed....\n");
+			fflush(stdout);
 		}
 
 		snprintf(debug_text, 25, "MENU:%u | active:%d", currentItem,
@@ -459,13 +480,13 @@ int main(void) {
 		fflush(stdout);
 		HAL_Delay(100);
 	}
-
-	/* USER CODE END WHILE */
-
-	/* USER CODE BEGIN 3 */
-
-	/* USER CODE END 3 */
 }
+
+/* USER CODE END WHILE */
+
+/* USER CODE BEGIN 3 */
+
+/* USER CODE END 3 */
 
 /**
  * @brief System Clock Configuration
