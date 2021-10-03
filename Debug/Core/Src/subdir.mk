@@ -14,6 +14,7 @@ C_SRCS += \
 ../Core/Src/main.c \
 ../Core/Src/menu.c \
 ../Core/Src/rtc.c \
+../Core/Src/sdcard.c \
 ../Core/Src/spi.c \
 ../Core/Src/stm32f4xx_hal_msp.c \
 ../Core/Src/stm32f4xx_it.c \
@@ -33,6 +34,7 @@ OBJS += \
 ./Core/Src/main.o \
 ./Core/Src/menu.o \
 ./Core/Src/rtc.o \
+./Core/Src/sdcard.o \
 ./Core/Src/spi.o \
 ./Core/Src/stm32f4xx_hal_msp.o \
 ./Core/Src/stm32f4xx_it.o \
@@ -52,6 +54,7 @@ C_DEPS += \
 ./Core/Src/main.d \
 ./Core/Src/menu.d \
 ./Core/Src/rtc.d \
+./Core/Src/sdcard.d \
 ./Core/Src/spi.d \
 ./Core/Src/stm32f4xx_hal_msp.d \
 ./Core/Src/stm32f4xx_it.d \

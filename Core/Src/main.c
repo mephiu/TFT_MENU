@@ -39,6 +39,7 @@
 #include "fatfs_sd.h"
 #include "string.h"
 #include "stdio.h"
+#include "sdcard.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,7 +69,7 @@ int __io_putchar(int ch) {
 
 /* USER CODE BEGIN PV */
 //volatile int16_t currentMenuIndex = 0;
-volatile int16_t menuMaxIndex = 5; //max number of selectable items on screen - menu
+volatile int16_t menuMaxIndex = MAX_MAIN_MENU_INDEX; //max number of selectable items on screen - menu
 volatile uint8_t encoderBtnFlag;	//flag for button interrupt
 uint8_t previousItem;		//needed for correct display of selected menu item
 uint8_t currentItem;
@@ -83,8 +84,9 @@ uint16_t sensor_data[8];			//raw adc data
 uint16_t summed_data[8];			//accu for adc data, needed for oversampling
 uint16_t averaged_data[8];			//averaged adc data
 
-uint8_t datetime[12] = {2, 0, 2, 1, 1, 2, 1, 5, 1, 7, 5, 9};
+uint8_t datetime[12] = { 2, 0, 2, 1, 1, 2, 1, 5, 1, 7, 5, 9 };
 uint8_t datetimeIndex;
+uint8_t mounted = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -95,175 +97,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-FATFS fs;  // file system
-FIL fil; // File
-FILINFO fno;
-FRESULT fresult;  // result
-UINT br, bw;  // File read/write count
 
-/**** capacity related *****/
-FATFS *pfs;
-DWORD fre_clust;
-uint32_t total, free_space;
-
-#define BUFFER_SIZE 128
-char buffer[BUFFER_SIZE];  // to store uart statuses
-
-int i = 0;
-
-int bufsize(char *buf) {
-	int i = 0;
-	while (*buf++ != '\0')
-		i++;
-	return i;
-}
-
-void clear_buffer(void) {
-	for (int i = 0; i < BUFFER_SIZE; i++)
-		buffer[i] = '\0';
-}
-
-void sd_card_mount(void) {
-	fresult = f_mount(&fs, "/", 1);
-	if (fresult != FR_OK)
-		printf("ERROR!!! in mounting SD CARD...\n\n");
-	else
-		printf("SD CARD mounted successfully...\n\n");
-}
-
-void sd_card_unmount(void) {
-	/* Unmount SDCARD */
-	fresult = f_mount(NULL, "/", 1);
-	if (fresult == FR_OK)
-		printf("SD CARD UNMOUNTED successfully...\n");
-}
-
-void sd_card_check_capacity(void) {
-	f_getfree("", &fre_clust, &pfs);
-	total = (uint32_t) ((pfs->n_fatent - 2) * pfs->csize * 0.5);
-	sprintf(buffer, "SD CARD Total Size: \t%lu\n", total);
-	printf(buffer);
-	clear_buffer();
-	free_space = (uint32_t) (fre_clust * pfs->csize * 0.5);
-	sprintf(buffer, "SD CARD Free Space: \t%lu\n\n", free_space);
-	printf(buffer);
-	clear_buffer();
-}
-
-void sd_card_basic_write_to_file(char *filename) {
-	/* Open file to write/ create a file if it doesn't exist */
-	fresult = f_open(&fil, filename, FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
-
-	/* Writing text */
-	f_puts(
-			"DateTime - Channel 0 - Channel 1 - Channel 2 - Channel 3 - Channel 4 - Channel 5 - Channel 6 - Channel 7\n",
-			&fil);
-
-	/* Close file */
-	fresult = f_close(&fil);
-
-	if (fresult == FR_OK)
-		printf("READINGS.txt created and the data is written \n");
-
-}
-
-void sd_card_basic_read_file(void) {
-	/* Open file to read */
-	fresult = f_open(&fil, "READINGS.txt", FA_READ);
-
-	/* Read string from the file */
-	f_gets(buffer, f_size(&fil), &fil);
-
-	printf("READINGS.txt is opened and it contains the data as shown below\n");
-	printf(buffer);
-	printf("\n\n");
-
-	/* Close file */
-	f_close(&fil);
-
-	clear_buffer();
-}
-
-void sd_card_write_to_file(char *filename) {
-	/* Create second file with read write access and open it */
-	fresult = f_open(&fil, filename, FA_CREATE_ALWAYS | FA_WRITE);
-
-	/* Writing text */
-	strcpy(buffer, "This is file with measurements\n");
-
-	fresult = f_write(&fil, buffer, bufsize(buffer), &bw);
-
-	printf("datetime.txt created and data is written\n");
-
-	/* Close file */
-	f_close(&fil);
-
-	// clearing buffer to show that result obtained is from the file
-	clear_buffer();
-}
-
-void sd_card_read_file(char *filename) {
-	/* Open second file to read */
-	fresult = f_open(&fil, filename, FA_READ);
-	if (fresult == FR_OK)
-		printf("filename is open and the data is shown below\n");
-
-	/* Read data from the file
-	 * Please see the function details for the arguments */
-	f_read(&fil, buffer, f_size(&fil), &br);
-	printf(buffer);
-	printf("\n\n");
-
-	/* Close file */
-	f_close(&fil);
-
-	clear_buffer();
-}
-
-void sd_card_update_file(char *filename, uint16_t *measurements) {
-	/* Open the file with write access */
-	fresult = f_open(&fil, filename, FA_OPEN_EXISTING | FA_READ | FA_WRITE);
-
-	/* Move to offset to the end of the file */
-	fresult = f_lseek(&fil, f_size(&fil));
-
-	if (fresult == FR_OK)
-		printf("About to update the filename.txt\n");
-
-	/* write the string to the file */
-	snprintf(buffer, sizeof(buffer),
-			"01/01/2021 - %d - %d - %d - %d - %d - %d - %d - %d\n",
-			measurements[0], measurements[1], measurements[2], measurements[3],
-			measurements[4], measurements[5], measurements[6], measurements[7]);
-	fresult = f_puts(buffer, &fil);
-
-	f_close(&fil);
-
-	clear_buffer();
-}
-
-void sd_card_read_from_file(char *filename) {
-	/* Open to read the file */
-	fresult = f_open(&fil, filename, FA_READ);
-
-	/* Read string from the file */
-	fresult = f_read(&fil, buffer, f_size(&fil), &br);
-	if (fresult == FR_OK)
-		printf("Below is the data from updated file2.txt\n");
-	printf(buffer);
-	printf("\n\n");
-
-	/* Close file */
-	f_close(&fil);
-
-	clear_buffer();
-}
-
-void sd_card_remove_file(char *filename) {
-	fresult = f_unlink(filename);
-	if (fresult == FR_OK)
-		printf("filename.txt removed successfully...\n");
-}
 /* USER CODE END 0 */
 
 /**
@@ -303,25 +137,12 @@ int main(void) {
 	MX_USART6_UART_Init();
 	MX_FATFS_Init();
 	/* USER CODE BEGIN 2 */
-//*******************************************************SD_CARD FUNCTIONS**************************************
-	HAL_Delay(500);
-
-	/*************** Card capacity details ********************/
-	sd_card_mount();
-	/* Check free space */
-	sd_card_check_capacity();
-
-//*******************************************************SD_CARD FUNCTIONS**************************************
 	printf("Starting..\n");
-	fflush(stdout);
 
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensor_data,
 			sizeof(sensor_data) / sizeof(int16_t));
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
-	//start LCD
 	lcd_init();
-	//generate filename from RTC
-	sd_card_basic_write_to_file("POMIARY.txt");
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -344,7 +165,8 @@ int main(void) {
 				summed_data[var] = 0;
 			}
 			show_sensor_data(averaged_data, activeChannels);
-			sd_card_update_file("POMIARY.txt", averaged_data);
+			if (mounted)
+				sd_card_update_file("POMIARY.txt", averaged_data);
 			HAL_Delay(1000);
 			printf("Sensor data case executed.\n");
 			fflush(stdout);
@@ -353,8 +175,7 @@ int main(void) {
 			currentItem = (__HAL_TIM_GET_COUNTER(&htim2) >> 1) % menuMaxIndex;
 			assert(currentItem <= menuMaxIndex - 1);
 			show_main_menu();
-			deselect_item(previousItem);
-			select_item(currentItem);
+			select_item(previousItem, currentItem);
 			if (previousItem != currentItem) {
 				previousItem = currentItem;
 			}
@@ -394,16 +215,99 @@ int main(void) {
 			currentItem = (__HAL_TIM_GET_COUNTER(&htim2) >> 1) % menuMaxIndex;
 			assert(currentItem <= menuMaxIndex - 1);
 			show_misc_menu();
-			deselect_item(previousItem);
-			select_item(currentItem);
+			select_item(previousItem, currentItem);
 			if (previousItem != currentItem) {
 				previousItem = currentItem;
 			}
 			break;
 		case 41:
 			currentItem = __HAL_TIM_GET_COUNTER(&htim2) >> 1;
-			datetime[datetimeIndex] = currentItem % 10;
+			switch (datetimeIndex) {
+			//2021 12 26 23 59
+			case 0:
+				datetime[datetimeIndex] = currentItem % 10;
+				if (datetime[datetimeIndex] < 1) {
+					datetime[datetimeIndex] = 1;
+					__HAL_TIM_GET_COUNTER(&htim2) = 1 * 2;
+				}
+				if (datetime[datetimeIndex] > 2) {
+					datetime[datetimeIndex] = 2;
+					__HAL_TIM_GET_COUNTER(&htim2) = 2 * 2;
+				}
+				break;
+			case 4: //month1
+				datetime[datetimeIndex] = currentItem % 10;
+				if (datetime[datetimeIndex] > 1) {
+					datetime[datetimeIndex] = 1;
+					__HAL_TIM_GET_COUNTER(&htim2) = 1 * 2;
+				}
+				break;
+			case 5: //month2
+				datetime[datetimeIndex] = currentItem % 10;
+				if (datetime[datetimeIndex - 1] == 1) {
+					if (datetime[datetimeIndex] > 2) {
+						datetime[datetimeIndex] = 2; //for 10,11,12
+						__HAL_TIM_GET_COUNTER(&htim2) = 2 * 2;
+					}
+				} else if (datetime[datetimeIndex - 1] == 0) {
+					if (datetime[datetimeIndex] < 1) {
+						datetime[datetimeIndex] = 1; //for 01,02,03,04,05,06,07,08,09
+						__HAL_TIM_GET_COUNTER(&htim2) = 1 * 2;
+					}
+				}
+				break;
+			case 6: //day1
+				datetime[datetimeIndex] = currentItem % 10;
+				if (datetime[datetimeIndex] > 3) {
+					datetime[datetimeIndex] = 3;
+					__HAL_TIM_GET_COUNTER(&htim2) = 3 * 2;
+				}
+				break;
+			case 7: //day2
+				datetime[datetimeIndex] = currentItem % 10;
+				if (datetime[datetimeIndex - 1] == 3) {
+					if (datetime[datetimeIndex] > 1) {
+						datetime[datetimeIndex] = 1; //for 30,31
+						__HAL_TIM_GET_COUNTER(&htim2) = 1 * 2;
+					}
+				} else if (datetime[datetimeIndex - 1] == 0) {
+					if (datetime[datetimeIndex] < 1) {
+						datetime[datetimeIndex] = 1; //for 01,02,03,04,05,06,07,08,09
+						__HAL_TIM_GET_COUNTER(&htim2) = 1 * 2;
+					}
+				}
+				break;
+			case 8: //hour1
+				datetime[datetimeIndex] = currentItem % 10;
+				if (datetime[datetimeIndex] > 2) {
+					datetime[datetimeIndex] = 2;
+					__HAL_TIM_GET_COUNTER(&htim2) = 2 * 2;
+				}
+				break;
+			case 9: //hour2
+				datetime[datetimeIndex] = currentItem % 10;
+				if (datetime[datetimeIndex - 1] == 2) {
+					if (datetime[datetimeIndex] > 3) {
+						datetime[datetimeIndex] = 3; //for 20,21,22,23
+						__HAL_TIM_GET_COUNTER(&htim2) = 3 * 2;
+					}
+				}
+				break;
+			case 10: //minute1
+				datetime[datetimeIndex] = currentItem % 10;
+				if (datetime[datetimeIndex] > 5) {
+					datetime[datetimeIndex] = 5;
+					__HAL_TIM_GET_COUNTER(&htim2) = 5 * 2;
+				}
+				break;
+			default:
+				datetime[datetimeIndex] = currentItem % 10;
+				break;
+			}
 			set_datetime_screen(datetimeIndex, datetime);
+			break;
+		case 42:
+			show_sd_card_info();
 			break;
 		}
 		//************************CHANGING SCREENS************************
@@ -413,7 +317,7 @@ int main(void) {
 			case 0: //sensor to menu
 				__HAL_TIM_SET_COUNTER(&htim2, 0);
 				activeScreen = 1;
-				menuMaxIndex = 5;
+				menuMaxIndex = MAX_MAIN_MENU_INDEX;
 				break;
 			case 1:	//menu to ...
 				//menu to sensor
@@ -426,14 +330,14 @@ int main(void) {
 					__HAL_TIM_GET_COUNTER(&htim2) = activeChannels * 2; //you can't assign value to shifted value, hence no >> is used, silly me tried..
 					activeScreen = 11;
 					break;
-				} else if (currentItem == 1) {
+				} else if (currentItem == 1) { //menu to oversampling
 					__HAL_TIM_GET_COUNTER(&htim2) = oversamplingPrescaler * 2; //you can't assign value to shifted value, hence no >> is used, silly me tried..
 					activeScreen = 12;
 					break;
-				} else if (currentItem == 3) {
+				} else if (currentItem == 3) { //menu to misc
 					activeScreen = 14;
 					__HAL_TIM_GET_COUNTER(&htim2) = 0;
-					menuMaxIndex = 3;
+					menuMaxIndex = MAX_MISC_MENU_INDEX;
 					break;
 				}
 			case 11: //channels to main menu
@@ -446,7 +350,7 @@ int main(void) {
 				break;
 			case 14: //misc menu to main menu
 				if (currentItem == (menuMaxIndex - 1)) {
-					menuMaxIndex = 5;
+					menuMaxIndex = MAX_MAIN_MENU_INDEX;
 					__HAL_TIM_GET_COUNTER(&htim2) = 0;
 					activeScreen = 1;
 					break;
@@ -457,13 +361,33 @@ int main(void) {
 					activeScreen = 41; //switch to datetime screen
 					break;
 				}
+				if (currentItem == 1){
+					activeScreen = 42; //switch to SD card info
+					break;
+				}
+				if (currentItem == 2){
+					sd_card_mount();
+					sd_card_basic_write_to_file("POMIARY.txt");
+					mounted = 1;
+					break;
+				}
+				if (currentItem == 3){
+					sd_card_unmount();
+					mounted = 0;
+					break;
+				}
 			case 41: //set datetime to misc menu
 				//iterate over each symbol 2021-12-20 17:56 - 12 symbols to iterate through
-				while (datetimeIndex >= 12){
+				while (datetimeIndex >= 11) {
 					activeScreen = 14;
 					datetimeIndex = 0;
 				}
 				datetimeIndex++;
+				__HAL_TIM_GET_COUNTER(&htim2) = 0;
+				break;
+			case 42:
+				__HAL_TIM_GET_COUNTER(&htim2) = 0;
+				activeScreen = 14;
 				break;
 			default:
 				break;
