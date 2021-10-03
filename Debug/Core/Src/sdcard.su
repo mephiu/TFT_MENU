@@ -1,0 +1,12 @@
+sdcard.c:26:5:bufsize	24	static
+sdcard.c:33:6:clear_buffer	16	static
+sdcard.c:38:6:sd_card_mount	8	static
+sdcard.c:46:6:sd_card_unmount	8	static
+sdcard.c:53:7:sd_card_check_capacity	8	static
+sdcard.c:63:6:sd_card_basic_write_to_file	16	static
+sdcard.c:80:6:sd_card_basic_read_file	8	static
+sdcard.c:97:6:sd_card_write_to_file	24	static
+sdcard.c:115:6:sd_card_read_file	16	static
+sdcard.c:133:6:sd_card_update_file	64	static
+sdcard.c:155:6:sd_card_read_from_file	16	static
+sdcard.c:172:6:sd_card_remove_file	16	static
