@@ -8,7 +8,7 @@
 
 int bufsize(char *buf);
 void clear_buffer(void);
-void sd_card_mount(void);
+uint8_t sd_card_mount(void);
 void sd_card_unmount(void);
 char* sd_card_check_capacity(void);
 void sd_card_basic_write_to_file(char *filename);

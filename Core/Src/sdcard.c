@@ -6,6 +6,8 @@
  */
 #include "fatfs.h"
 #include <stdio.h>
+#include <string.h>
+#include "fatfs_sd.h"
 
 #define BUFFER_SIZE 128
 
@@ -35,12 +37,18 @@ void clear_buffer(void) {
 		buffer[i] = '\0';
 }
 
-void sd_card_mount(void) {
+uint8_t sd_card_mount(void) {
 	fresult = f_mount(&fs, "/", 1);
-	if (fresult != FR_OK)
-		printf("ERROR!!! in mounting SD CARD...\n\n");
-	else
+	uint8_t errorCode;
+	if (fresult != FR_OK){
+		printf("ERROR!!! in mounting SD CARD: %d", fresult);
+		errorCode = 1;
+	}
+	else{
 		printf("SD CARD mounted successfully...\n\n");
+		errorCode = 0;
+	}
+	return errorCode;
 }
 
 void sd_card_unmount(void) {

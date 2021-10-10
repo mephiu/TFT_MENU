@@ -12,6 +12,9 @@
 #include "stdio.h"
 #include "stm32f4xx_hal.h"
 #include "menu.h"
+#include "sdcard.h"
+
+#include <string.h>
 
 char text_to_parse[16];
 extern uint8_t mounted;
@@ -130,7 +133,8 @@ void select_item(int previousItemIndex, int currentItemIndex) {
 void show_sd_card_info(){
 	static char card_capacity[40];
 	if (mounted) strcpy(card_capacity, sd_card_check_capacity());
-	else snprintf(card_capacity, 30, "SD CARD NOT MOUNTED!");
+	else snprintf(card_capacity, 40, "SD CARD NOT MOUNTED!");
+	printf(card_capacity);
 	//***SCREEN CONST*****
 		hagl_clear_screen();
 		for (int i = 0; i < 5; ++i) {
